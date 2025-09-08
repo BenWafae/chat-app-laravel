@@ -43,8 +43,25 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
-    public function messages()
+
+
+    public function sentMessages()
 {
-    return $this->hasMany(Message::class);
+    return $this->hasMany(Message::class, 'user_id');
+}
+
+
+
+public function receivedMessages()
+{
+    return $this->hasMany(Message::class, 'receiver_id');
+}
+
+public function conversations()
+{
+    return $this->belongsToMany(User::class, 'messages', 'user_id', 'receiver_id')
+                ->orWhere(function($query) {
+                    $query->belongsToMany(User::class, 'messages', 'receiver_id', 'user_id');
+                })->distinct();
 }
 }
