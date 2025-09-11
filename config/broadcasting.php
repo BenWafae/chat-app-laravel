@@ -15,7 +15,8 @@ return [
     |
     */
 
-    'default' => env('BROADCAST_DRIVER', 'null'),
+    'default' => env('BROADCAST_DRIVER', 'pusher'),
+
 
     /*
     |--------------------------------------------------------------------------
@@ -35,12 +36,15 @@ return [
             'key' => env('PUSHER_APP_KEY'),
             'secret' => env('PUSHER_APP_SECRET'),
             'app_id' => env('PUSHER_APP_ID'),
-            'options' => [
-                'host' => env('PUSHER_HOST') ?: 'api-'.env('PUSHER_APP_CLUSTER', 'mt1').'.pusher.com',
-                'port' => env('PUSHER_PORT', 443),
-                'scheme' => env('PUSHER_SCHEME', 'https'),
-                'encrypted' => true,
-                'useTLS' => env('PUSHER_SCHEME', 'https') === 'https',
+           'options' => [
+        'cluster' => env('PUSHER_APP_CLUSTER'), // obligatoire pour Laravel Echo
+         'useTLS' => false,                     // pas de SSL en local
+         'host' => env('PUSHER_HOST'),          // 127.0.0.1
+         'port' => env('PUSHER_PORT'),          // 6001
+         'scheme' => env('PUSHER_SCHEME'),      // http
+         'encrypted' => false,
+
+                
             ],
             'client_options' => [
                 // Guzzle client options: https://docs.guzzlephp.org/en/stable/request-options.html
