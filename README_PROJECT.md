@@ -31,5 +31,7 @@ php artisan migrate
 
 php artisan serve
 php artisan websockets:serve
+
 ## 📸 Captures d’écran
+
 <img width="950" height="392" alt="chat 3" src="https://github.com/user-attachments/assets/070753db-7710-433c-a8f3-498b23179bda" />
