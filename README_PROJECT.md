@@ -11,23 +11,23 @@ Application de messagerie en temps réel développée avec **Laravel**, **Larave
 ```bash
 git clone https://github.com/BenWafae/chat-app-laravel.git
 cd chat-app-laravel
-Installer les dépendances PHP
+2. **Installer les dépendances PHP** 
 
 composer install
 
 
-Installer les dépendances front
+3. **Installer les dépendances front**
 
 npm install
 npm run dev
 
 
-Migrer la base de données
+4. **Migrer la base de données** 
 
 php artisan migrate
 
 
-Lancer le serveur
+5. **Lancer le serveur**
 
 php artisan serve
 php artisan websockets:serve
