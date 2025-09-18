@@ -258,208 +258,150 @@
             </form>
         </div>
     </div>
+@vite(['resources/js/app.js'])
+<script> 
+document.addEventListener('DOMContentLoaded', function() {
+    const messageForm = document.getElementById('message-form');
+    const messageInput = document.getElementById('message-input');
+    const messagesContainer = document.getElementById('messages-container');
+    const messages = document.getElementById('messages');
+    
+    const userId = {{ $user->id }};
+    const currentUserId = {{ Auth::id() }};
+    const userName = '{{ $user->name }}';
+    const userInitial = '{{ substr($user->name, 0, 1) }}';
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const messageForm = document.getElementById('message-form');
-            const messageInput = document.getElementById('message-input');
-            const messagesContainer = document.getElementById('messages-container');
-            const messages = document.getElementById('messages');
-            const sendButton = document.getElementById('send-button');
-            const typingIndicator = document.getElementById('typing-indicator');
-            const userId = {{ $user->id }};
-            const currentUserId = {{ Auth::id() }};
+    // Debug : vérifier la connexion Echo
+    console.log('Echo disponible:', !!window.Echo);
+    console.log('Canal à écouter:', `chat.${currentUserId}`);
 
-            // Auto-resize du textarea
-            messageInput.addEventListener('input', function() {
-                this.style.height = '44px';
-                this.style.height = Math.min(this.scrollHeight, 120) + 'px';
-            });
+    function scrollToBottom() {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
 
-            // Fonction pour faire défiler vers le bas
-            function scrollToBottom(smooth = true) {
-                const behavior = smooth ? 'smooth' : 'instant';
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            }
-
-            // Faire défiler vers le bas au chargement
-            scrollToBottom(false);
-
-            // Fonction pour ajouter un message à l'interface
-            function addMessageToUI(message, isOwn = false, animate = true) {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = `flex ${isOwn ? 'justify-end' : 'justify-start'}`;
-                
-                if (animate) {
-                    messageDiv.style.opacity = '0';
-                    messageDiv.style.transform = 'translateY(10px)';
-                }
-
-                const now = new Date();
-                const timeString = now.toLocaleTimeString('fr-FR', { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                });
-
-                if (isOwn) {
-                    messageDiv.innerHTML = `
-                        <div class="message-bubble bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl rounded-br-md px-4 py-3 text-white shadow-lg">
-                            <p class="text-sm">${message}</p>
-                            <div class="flex items-center justify-end mt-1 space-x-1">
-                                <p class="text-xs text-blue-100">${timeString}</p>
-                                <svg class="w-3 h-3 text-blue-100" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                </svg>
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    messageDiv.innerHTML = `
-                        <div class="flex items-end space-x-2">
-                            <div class="w-8 h-8 avatar-gradient-${userId % 8 + 1} rounded-full flex items-center justify-center text-black font-bold text-sm flex-shrink-0">
-                                {{ substr($user->name, 0, 1) }}
-                            </div>
-                            <div class="message-bubble bg-white rounded-2xl rounded-bl-md px-4 py-3 shadow-sm border">
-                                <p class="text-black-800 text-sm">${message}</p>
-                                <p class="text-xs text-black-500 mt-1">${timeString}</p>
-                            </div>
-                        </div>
-                    `;
-                }
-
-                messages.appendChild(messageDiv);
-
-                if (animate) {
-                    setTimeout(() => {
-                        messageDiv.style.transition = 'all 0.3s ease-out';
-                        messageDiv.style.opacity = '1';
-                        messageDiv.style.transform = 'translateY(0)';
-                    }, 10);
-                }
-
-                scrollToBottom();
-            }
-
-            // Fonction pour afficher l'indicateur de frappe
-            function showTypingIndicator() {
-                typingIndicator.style.display = 'flex';
-                scrollToBottom();
-            }
-
-            // Fonction pour masquer l'indicateur de frappe
-            function hideTypingIndicator() {
-                typingIndicator.style.display = 'none';
-            }
-
-            // Envoi de message
-            messageForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                const message = messageInput.value.trim();
-                if (!message) return;
-
-                // Désactiver le formulaire pendant l'envoi
-                messageInput.disabled = true;
-                sendButton.disabled = true;
-                sendButton.innerHTML = `
-                    <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                `;
-
-                // Ajouter le message immédiatement à l'interface
-                addMessageToUI(message, true);
-                messageInput.value = '';
-                messageInput.style.height = '44px';
-
-                // Envoyer le message au serveur
-                fetch(`/user/chat/${userId}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content || '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({ message: message })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (!data.success) {
-                        throw new Error(data.message || 'Erreur lors de l\'envoi du message');
-                    }
-                })
-                .catch(error => {
-                    console.error('Erreur:', error);
-                    alert('Erreur lors de l\'envoi du message: ' + error.message);
-                })
-                .finally(() => {
-                    // Réactiver le formulaire
-                    messageInput.disabled = false;
-                    sendButton.disabled = false;
-                    sendButton.innerHTML = `
-                        <svg class="w-5 h-5 transform rotate-45" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
-                        </svg>
-                    `;
-                    messageInput.focus();
-                });
-            });
-
-            // Gestion de la touche Entrée
-            messageInput.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    messageForm.dispatchEvent(new Event('submit'));
-                }
-            });
-
-            // Fonction pour charger les nouveaux messages
-            function loadMessages() {
-                fetch(`/user/messages/${userId}`)
-                    .then(response => response.json())
-                    .then(messagesData => {
-                        const currentMessages = messages.children.length;
-                        
-                        if (messagesData.length === 0 && currentMessages === 0) {
-                            messages.innerHTML = `
-                                <div class="text-center py-12">
-                                    <div class="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <svg class="w-10 h-10 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
-                                        </svg>
-                                    </div>
-                                    <h3 class="text-lg font-medium text-gray-800 mb-2">Nouvelle conversation</h3>
-                                    <p class="text-gray-600">Envoyez le premier message à {{ $user->name }} !</p>
-                                </div>
-                            `;
-                            return;
-                        }
-
-                        // Si de nouveaux messages sont disponibles
-                        if (messagesData.length > currentMessages) {
-                            // Ajouter uniquement les nouveaux messages
-                            const newMessages = messagesData.slice(currentMessages);
-                            newMessages.forEach(message => {
-                                const isOwn = message.user_id == currentUserId;
-                                addMessageToUI(message.message, isOwn, true);
-                            });
-                        }
-                    })
-                    .catch(error => console.error('Erreur lors du chargement des messages:', error));
-            }
-
-            // Actualiser les messages toutes les 2 secondes
-            setInterval(loadMessages, 2000);
-
-            // Simulation d'indicateur de frappe (à remplacer par WebSocket plus tard)
-            let typingTimer;
-            messageInput.addEventListener('input', function() {
-                // Ici vous pourrez envoyer un signal de frappe via WebSocket
-                clearTimeout(typingTimer);
-                typingTimer = setTimeout(() => {
-                    // Signal d'arrêt de frappe
-                }, 1000);
-            });
+    function addMessageToUI(messageData, isOwn = false) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `flex ${isOwn ? 'justify-end' : 'justify-start'}`;
+        
+        const timeString = new Date().toLocaleTimeString('fr-FR', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
         });
-    </script>
+
+        if (isOwn) {
+            messageDiv.innerHTML = `
+                <div class="message-bubble bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl rounded-br-md px-4 py-3 text-white shadow-lg">
+                    <p class="text-sm">${messageData.message}</p>
+                    <div class="flex items-center justify-end mt-1 space-x-1">
+                        <p class="text-xs text-blue-100">${timeString}</p>
+                        <svg class="w-3 h-3 text-blue-100" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                </div>
+            `;
+        } else {
+            messageDiv.innerHTML = `
+                <div class="flex items-end space-x-2">
+                    <div class="w-8 h-8 avatar-gradient-${userId % 8 + 1} rounded-full flex items-center justify-center text-black font-bold text-sm flex-shrink-0">
+                        ${userInitial}
+                    </div>
+                    <div class="message-bubble bg-white rounded-2xl rounded-bl-md px-4 py-3 shadow-sm border">
+                        <p class="text-gray-800 text-sm">${messageData.message}</p>
+                        <p class="text-xs text-gray-500 mt-1">${timeString}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        messages.appendChild(messageDiv);
+        scrollToBottom();
+    }
+
+    // Configuration WebSocket avec gestion d'erreurs améliorée
+    if (window.Echo) {
+        console.log('Connexion au canal:', `chat.${currentUserId}`);
+        
+        window.Echo.private(`chat.${currentUserId}`)
+            .listen('.MessageSent', (e) => {
+                console.log('Message reçu via WebSocket:', e);
+                
+                // Vérifier que le message vient du bon utilisateur
+                if (e.message && e.message.user_id === userId) {
+                    addMessageToUI(e.message, false);
+                }
+            })
+            .error((error) => {
+                console.error('Erreur sur le canal WebSocket:', error);
+            });
+
+        // Debug : écouter les événements de connexion
+        window.Echo.connector.pusher.connection.bind('connected', () => {
+            console.log('WebSocket connecté !');
+        });
+
+        window.Echo.connector.pusher.connection.bind('error', (err) => {
+            console.error('Erreur de connexion WebSocket:', err);
+        });
+
+    } else {
+        console.error('Laravel Echo non disponible - vérifiez bootstrap.js');
+    }
+
+    // Envoi de message avec gestion d'erreurs
+    messageForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const message = messageInput.value.trim();
+        if (!message) return;
+
+        // Désactiver le formulaire pendant l'envoi
+        messageInput.disabled = true;
+        document.getElementById('send-button').disabled = true;
+
+        // Ajouter le message immédiatement à l'interface
+        addMessageToUI({message: message}, true);
+        messageInput.value = '';
+        messageInput.style.height = '44px';
+
+        // Envoyer au serveur
+        fetch(`/user/chat/${userId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ message: message })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Erreur HTTP: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Message envoyé avec succès:', data);
+        })
+        .catch(error => {
+            console.error('Erreur lors de l\'envoi:', error);
+            // Optionnel : retirer le message de l'interface en cas d'erreur
+        })
+        .finally(() => {
+            // Réactiver le formulaire
+            messageInput.disabled = false;
+            document.getElementById('send-button').disabled = false;
+            messageInput.focus();
+        });
+    });
+
+    // Auto-resize du textarea
+    messageInput.addEventListener('input', function() {
+        this.style.height = '44px';
+        this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    });
+
+    scrollToBottom();
+});
+</script>
 </x-app-layout>

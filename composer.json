@@ -4,14 +4,15 @@
     "description": "The Laravel Framework.",
     "keywords": ["framework", "laravel"],
     "license": "MIT",
-    "require": {
-        "php": "^8.0.2",
-        "beyondcode/laravel-websockets": "1.14",
-        "guzzlehttp/guzzle": "^7.2",
-        "laravel/framework": "^9.19",
-        "laravel/sanctum": "^3.0",
-        "laravel/tinker": "^2.7"
-    },
+   "require": {
+    "php": "^8.0.2",
+    "beyondcode/laravel-websockets": "^1.14",   
+    "guzzlehttp/guzzle": "^7.2",
+    "laravel/framework": "^9.19",
+    "laravel/sanctum": "^3.0",
+    "laravel/tinker": "^2.7"
+},
+    
     "require-dev": {
         "fakerphp/faker": "^1.9.1",
         "laravel/breeze": "^1.19",
@@ -64,4 +65,5 @@
     },
     "minimum-stability": "stable",
     "prefer-stable": true
+
 }

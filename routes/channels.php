@@ -15,11 +15,22 @@ use Illuminate\Support\Facades\Broadcast;
 
 
 
+// Broadcast::channel('chat.{receiverId}', function ($user, $receiverId) {
+//     // Autorise uniquement le destinataire à écouter
+//     return (int) $user->id === (int) $receiverId;
+// });
+
+
+// Autorisation pour les canaux privés de chat
 Broadcast::channel('chat.{receiverId}', function ($user, $receiverId) {
-    // Autorise uniquement le destinataire à écouter
+    // Un utilisateur peut écouter son propre canal de réception
     return (int) $user->id === (int) $receiverId;
 });
 
+// Canal général pour les utilisateurs authentifiés
+Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
+    return (int) $user->id === (int) $id;
+});
 // ici on diffuse le canale private chat.recieved_id et pour qu un user ecoute un canale prv laravel 
 // doit savoir s il a la possibilite d y acceder sinon nimport qui poura lacceder that why we use private channel
 // chat.{receiverId} : c le nom de canal cote backend  receivedId est un parametre dynamqiue qui sera remplace par lid de user
